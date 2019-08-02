@@ -10,6 +10,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -60,6 +63,21 @@ public class PdfConverter implements Runnable {
     public void run() {
         mWebView = new WebView(mContext);
         mWebView.setWebViewClient(new WebViewClient() {
+
+            @Override
+            public void onReceivedError (WebView view,
+                                         WebResourceRequest request,
+                                         WebResourceError error) {
+                mPromise.reject(error.toString());
+            }
+
+            @Override
+            public void onReceivedHttpError (WebView view,
+                                             WebResourceRequest request,
+                                             WebResourceResponse errorResponse) {
+                mPromise.reject(errorResponse.toString());
+            }
+
             @Override
             public void onPageFinished(WebView view, String url) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)
@@ -96,7 +114,9 @@ public class PdfConverter implements Runnable {
         });
         WebSettings settings = mWebView.getSettings();
         settings.setDefaultTextEncodingName("utf-8");
-        mWebView.loadData(mHtmlString, "text/HTML; charset=utf-8", null);
+        //mWebView.loadData(mHtmlString, "text/HTML; charset=utf-8", null);
+        mWebView.loadDataWithBaseURL(mBaseURL, mHtmlString,"text/html", "utf-8", null);
+
     }
 
     public PrintAttributes getPdfPrintAttrs() {
@@ -144,7 +164,7 @@ public class PdfConverter implements Runnable {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) return null;
 
         return new PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.NA_LETTER)
+                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
                 .setResolution(new PrintAttributes.Resolution("RESOLUTION_ID", "RESOLUTION_ID", 600, 600))
                 .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                 .build();

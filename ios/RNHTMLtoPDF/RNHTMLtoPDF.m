@@ -174,6 +174,10 @@ RCT_EXPORT_METHOD(convert:(NSDictionary *)options
     NSString *path = [[NSBundle mainBundle] bundlePath];
     NSURL *baseURL = [NSURL fileURLWithPath:path];
 
+    if (options[@"baseURL"]) {
+        baseURL = [RCTConvert NSURL:options[@"baseURL"]];
+    }
+
     [_webView loadHTMLString:_html baseURL:baseURL];
 
     _resolveBlock = resolve;
